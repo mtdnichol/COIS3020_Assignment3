@@ -57,11 +57,10 @@ namespace COIS3020_Assignment3 {
         public void Print() {
             Color[,] testArray = new Color[length,length];
             Print(root, testArray, 0, 0, length);
-
-            Console.WriteLine();
+            
             //Print the array to the console
-            for (int i = 0; i < length; ++i) {
-                for (int j = 0; j < length; ++j) {
+            for (int i = 0; i < length; i++) {
+                for (int j = 0; j < length; j++) {
                     if (testArray[i,j] == Color.BLACK)
                         Console.Write("B");
                     else
@@ -81,8 +80,8 @@ namespace COIS3020_Assignment3 {
             switch (node.getColor()) { //Check the color of the current node
                 case Color.WHITE: //If either black or white, all nodes beneath are that color
                 case Color.BLACK:
-                    for (int i = x; i < n/2; i++) //Iterate over the current section and copy it into the Color array
-                        for (int j = y; j < n/2; ++j) {
+                    for (int i = x; i < n + x; i++) //Iterate over the current section and copy it into the Color array
+                        for (int j = y; j < n + y; j++) {
                             testArray[x, y] = node.getColor();
                         }
                     break;
@@ -91,6 +90,9 @@ namespace COIS3020_Assignment3 {
                     Print(node.getNE(), testArray, x, y + n / 2, n / 2);
                     Print(node.getSE(), testArray, x + n / 2, y + n / 2, n / 2);
                     Print(node.getSW(), testArray, x + n / 2, y, n / 2);
+                    break;
+                default:
+                    Console.WriteLine("Error...");
                     break;
             }
         }
@@ -113,9 +115,11 @@ namespace COIS3020_Assignment3 {
             Compress(node.getNE());
             Compress(node.getSE());
             Compress(node.getSW());
-            
-            if (node.LikeChildren()) //Check if the node has like children (same colors)
+
+            if (node.LikeChildren()) {//Check if the node has like children (same colors)
                 node.setColor(node.getNW().getColor()); //If node has like children, the color of the node can be set to the color of its children
+                node.ClearChildren();
+            }
             else {
                 node.setColor(Color.GRAY); //Otherwise, the node is coloured grey
             }
@@ -127,8 +131,71 @@ namespace COIS3020_Assignment3 {
             
         }
 
-        private void Switch() { //May actually need to be a bool
-            
+        private void Switch(int i, int j, Node node, int size) { //May actually need to be a bool
+            if (size == 1)
+                if (node.getColor() == Color.BLACK)
+                    node.setColor(Color.WHITE);
+                else
+                    node.setColor(Color.BLACK);
+
+            if (node.getColor() != Color.GRAY) { //Traverse sub quadrant
+                switch (GetQuadrant(i, j, size)) {
+                    case 1:
+                        Switch(i, j, node.getNW(), size/2);
+                        break;
+                    case 2:
+                        Switch(i, j, node.getNE(), size/2);
+                        break;
+                    case 3:
+                        Switch(i, j, node.getSE(), size/2);
+                        break;
+                    case 4:
+                        Switch(i, j, node.getSW(), size/2);
+                        break;
+                }
+            } else { //Node is a leaf node, must create children and traverse proper quadrant
+                node.setNW(new Node(node.getColor()));
+                node.setNE(new Node(node.getColor()));
+                node.setSE(new Node(node.getColor()));
+                node.setSW(new Node(node.getColor()));
+                
+                switch (GetQuadrant(i, j, size)) {
+                    case 1:
+                        Switch(i, j, node.getNW(), size/2);
+                        break;
+                    case 2:
+                        Switch(i, j, node.getNE(), size/2);
+                        break;
+                    case 3:
+                        Switch(i, j, node.getSE(), size/2);
+                        break;
+                    case 4:
+                        Switch(i, j, node.getSW(), size/2);
+                        break;
+                }
+            }
+        }
+
+        // [1, 2],
+        // [4, 3]
+        //Cases:
+        //    1. size%2 == 0 && size%2 == 0
+        //    2. size%2 == 0 && size%2 == 1
+        //    3. size%2 == 1 && size%2 == 1
+        //    4. size%2 == 1 && size%2 == 0
+        public int GetQuadrant(int i, int j, int size) {
+            int results = -1;
+
+            if (size % 2 == 0 && size % 2 == 0)
+                return 1;
+            else if (size % 2 == 0 && size % 2 == 1)
+                return 2;
+            else if (size % 2 == 1 && size % 2 == 1)
+                return 3;
+            else if (size % 2 == 1 && size % 2 == 0)
+                return 4;
+
+            return results;
         }
 
         // Public Union
@@ -154,8 +221,18 @@ namespace COIS3020_Assignment3 {
             
             if (treeOne.getColor() == Color.BLACK || treeTwo.getColor() == Color.BLACK) { //Either black
                 node.setColor(Color.BLACK);
-            } else if (treeOne.getColor() == Color.WHITE && treeTwo.getColor() == Color.WHITE) { //Both white
-                node.setColor(Color.WHITE);
+            } else if (treeOne.getColor() == Color.WHITE) { //Tree one is white, contents of tree two copied over
+                node.setColor(treeTwo.getColor());
+                node.setNW(treeTwo.getNW());
+                node.setNE(treeTwo.getNE());
+                node.setSE(treeTwo.getSE());
+                node.setSW(treeTwo.getSW());
+            } else if (treeTwo.getColor() == Color.WHITE) { //Tree two is white, contents of tree two copied over
+                node.setColor(treeOne.getColor());
+                node.setNW(treeOne.getNW());
+                node.setNE(treeOne.getNE());
+                node.setSE(treeOne.getSE());
+                node.setSW(treeOne.getSW());
             } else { //Both gray
                 node.setNW(Union(treeOne.getNW(), treeTwo.getNW())); //All children are considered, and traversed
                 node.setNE(Union(treeOne.getNE(), treeTwo.getNE()));

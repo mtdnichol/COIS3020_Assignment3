@@ -7,11 +7,19 @@
             this.color = Color.GRAY;
         }
 
+        public Node(Color color) {
+            this.color = color;
+        }
+
         // Public LikeChildren
         // Checks if each child referenced by this node is the same color
         // Returns: boolean variable representing result of comparison
         public bool LikeChildren() {
-            return nw.getColor() == ne.getColor() && nw.getColor() == se.getColor() && nw.getColor() == sw.getColor();
+            return nw.getColor() == ne.getColor() && nw.getColor() == se.getColor() && nw.getColor() == sw.getColor() && color!=Color.GRAY;
+        }
+
+        public void ClearChildren() {
+            this.nw = this.ne = this.se = this.sw = null;
         }
 
         //Access properties GET/SET
