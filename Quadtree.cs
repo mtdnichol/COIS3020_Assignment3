@@ -75,16 +75,18 @@ namespace COIS3020_Assignment3 {
         // Constructs 2d array representing an image from a given QuadTree
         // Mutates a constructed Color[,] of size NxN
         // Parameters: node --> current QuadTree node, image --> 2d array composed of Color enum to be mutated, x/y --> starting indices of a quadrant, n --> length of the quadrant
+        // h = n/2
+        //    NW quadrant = x, y    NE quadrant = x, y + h    SE quadrant = x + h, y + h    SW quadrant = x + h, y
         private void Print(Node node, Color[,] testArray, int x, int y, int n) {
-            switch (node.getColor()) {
-                case Color.WHITE:
+            switch (node.getColor()) { //Check the color of the current node
+                case Color.WHITE: //If either black or white, all nodes beneath are that color
                 case Color.BLACK:
-                    for (int i = x; i < n/2; i++)
+                    for (int i = x; i < n/2; i++) //Iterate over the current section and copy it into the Color array
                         for (int j = y; j < n/2; ++j) {
                             testArray[x, y] = node.getColor();
                         }
                     break;
-                case Color.GRAY:
+                case Color.GRAY: //If gray, more nodes in the sub quadrants.  Traverse each
                     Print(node.getNW(), testArray, x, y, n / 2);
                     Print(node.getNE(), testArray, x, y + n / 2, n / 2);
                     Print(node.getSE(), testArray, x + n / 2, y + n / 2, n / 2);
@@ -92,24 +94,30 @@ namespace COIS3020_Assignment3 {
                     break;
             }
         }
-
-        //Recursively compress the current QuadTree to minimize its number of nodes.
+        
+        // Public Print
+        // Recursively compress the current QuadTree to minimize its number of nodes through private compress
+        // Parameters: None
         public void Compress() {
             Compress(this.root);
         }
 
+        // Private Compress
+        // Recursively compress the current QuadTree to minimize its number of nodes
+        // Parameters: node --> represents the current node to be compressed
+        // Note: Makes many references to a LikeChildren method inside of the Node object
         private void Compress(Node node) {
-            if (node.getColor() != Color.GRAY)
+            if (node.getColor() != Color.GRAY) //If the node colour isn't grey, a leaf node is reached and can no longer compress
                 return;
-            Compress(node.getNW());
+            Compress(node.getNW()); //Otherwise, traverse each quadrant to compress each
             Compress(node.getNE());
             Compress(node.getSE());
             Compress(node.getSW());
             
-            if (node.LikeChildren())
-                node.setColor(node.getNW().getColor()); //TEST
+            if (node.LikeChildren()) //Check if the node has like children (same colors)
+                node.setColor(node.getNW().getColor()); //If node has like children, the color of the node can be set to the color of its children
             else {
-                node.setColor(Color.GRAY);
+                node.setColor(Color.GRAY); //Otherwise, the node is coloured grey
             }
         }
 
@@ -119,40 +127,43 @@ namespace COIS3020_Assignment3 {
             
         }
 
-        private void Switch() {
+        private void Switch() { //May actually need to be a bool
             
         }
 
+        // Public Union
+        // Create, compress, and return a QuadTree which is the union of a given QuadTree Q and the current root
         public QuadTree Union(QuadTree Q) {
-            Node unionNode = Union(Q.getRoot(), root);
-            QuadTree unionQuadTree = new QuadTree(unionNode, length);
-            unionQuadTree.Compress();
+            Node unionNode = Union(Q.getRoot(), root); //Creates a new root node by recursively unionizing the two trees
+            QuadTree unionQuadTree = new QuadTree(unionNode, length); //Creates a new QuadTree with the completed root
+            unionQuadTree.Compress(); //Compresses the new QuadTree
 
-            return unionQuadTree;
-
-            //return new QuadTree(Union(Q.getRoot(), root), this.length);
+            return unionQuadTree; //Returns the resultant QuadTree to the caller
         }
-
+        
+        // Public Union
+        // Create, compress, and return a QuadTree which is the union of a given QuadTree treeOne and the current QuadTree treeTwo
+        // Parameters: Node treeOne --> Tree to be unionized with the root, treeTwo --> current root
         // Rules: Black if either image has a black in that location.  White only when both are white
         // Cases:
         //    1. t1 or t2 black, the corresponding node created is black.  If one black one gray, node contains a subtree underneath which need not be traversed
         //    2. t1 and t2 white, t2 and the subtree underneath is copied to created node
         //    3. Both t1 and t2 gray, corresponding children are considered
         private Node Union(Node treeOne, Node treeTwo) {
-            Node node = new Node();
+            Node node = new Node(); //New node is created (deep copy)
             
             if (treeOne.getColor() == Color.BLACK || treeTwo.getColor() == Color.BLACK) { //Either black
                 node.setColor(Color.BLACK);
             } else if (treeOne.getColor() == Color.WHITE && treeTwo.getColor() == Color.WHITE) { //Both white
                 node.setColor(Color.WHITE);
             } else { //Both gray
-                node.setNW(Union(treeOne.getNW(), treeTwo.getNW()));
+                node.setNW(Union(treeOne.getNW(), treeTwo.getNW())); //All children are considered, and traversed
                 node.setNE(Union(treeOne.getNE(), treeTwo.getNE()));
                 node.setSE(Union(treeOne.getSE(), treeTwo.getSE()));
                 node.setSW(Union(treeOne.getSW(), treeTwo.getSW()));
             }
 
-            return node;
+            return node; //Returns node after all paths have been traversed, and new tree is unionized
         }
 
         public int getLength() { return this.length; }
