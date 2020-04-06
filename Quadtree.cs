@@ -19,13 +19,13 @@ namespace COIS3020_Assignment3 {
         public QuadTree(Color[,] image, int size) {
             this.length = size;
             this.root = Construct(image, 0, 0, size);
-            Console.WriteLine();
             Compress();
         }
 
         public QuadTree(Node node, int size) {
             this.root = node;
             this.length = size;
+            Compress();
         }
 
         // Private Construct
@@ -61,10 +61,7 @@ namespace COIS3020_Assignment3 {
             //Print the array to the console
             for (int i = 0; i < length; i++) {
                 for (int j = 0; j < length; j++) {
-                    if (testArray[i,j] == Color.BLACK)
-                        Console.Write("B");
-                    else
-                        Console.Write("W");
+                    Console.Write(testArray[i,j] == Color.BLACK ? "B " : "W ");
                 }
                 Console.WriteLine();
             }
@@ -126,76 +123,43 @@ namespace COIS3020_Assignment3 {
         }
 
         //Update and compress (if necessary) the current QuadTree when the color at index [i,j] of the original
-        //    image is switched from BLACK to WHITE (or vice versa). Modify, but do not rebuild the quadtree.
+        //    image is switched from BLACK to WHITE (or vice versa). Modify, but do not rebuild the QuadTree.
+        //i,j are user passed coordinates, x,y are current section coordinates
         public void Switch(int i, int j) {
-            
+            Switch(i, j, 0,0, root, length);
         }
 
-        private void Switch(int i, int j, Node node, int size) { //May actually need to be a bool
-            if (size == 1)
-                if (node.getColor() == Color.BLACK)
-                    node.setColor(Color.WHITE);
-                else
-                    node.setColor(Color.BLACK);
-
-            if (node.getColor() != Color.GRAY) { //Traverse sub quadrant
-                switch (GetQuadrant(i, j, size)) {
-                    case 1:
-                        Switch(i, j, node.getNW(), size/2);
-                        break;
-                    case 2:
-                        Switch(i, j, node.getNE(), size/2);
-                        break;
-                    case 3:
-                        Switch(i, j, node.getSE(), size/2);
-                        break;
-                    case 4:
-                        Switch(i, j, node.getSW(), size/2);
-                        break;
-                }
-            } else { //Node is a leaf node, must create children and traverse proper quadrant
-                node.setNW(new Node(node.getColor()));
-                node.setNE(new Node(node.getColor()));
-                node.setSE(new Node(node.getColor()));
-                node.setSW(new Node(node.getColor()));
-                
-                switch (GetQuadrant(i, j, size)) {
-                    case 1:
-                        Switch(i, j, node.getNW(), size/2);
-                        break;
-                    case 2:
-                        Switch(i, j, node.getNE(), size/2);
-                        break;
-                    case 3:
-                        Switch(i, j, node.getSE(), size/2);
-                        break;
-                    case 4:
-                        Switch(i, j, node.getSW(), size/2);
-                        break;
+        // h = n/2
+        //    NW quadrant = x, y    NE quadrant = x, y + h    SE quadrant = x + h, y + h    SW quadrant = x + h, y
+        private void Switch(int i, int j, int x, int y, Node node, int size) {
+            if (node == null) return;
+            if (node.getColor() != Color.GRAY && x + size >= i && y + size >= j) { //Node is a leaf node, and within coordinates
+                if (size == 1) {
+                    if (i == x && j == y) {
+                        node.setColor(node.getColor() == Color.BLACK ? Color.WHITE : Color.BLACK);
+                    }
+                } else { //Size is not 1, so node theoretically has children of all the same color.  Populate children
+                    node.setNW(new Node(node.getColor()));
+                    node.setNE(new Node(node.getColor()));
+                    node.setSE(new Node(node.getColor()));
+                    node.setSW(new Node(node.getColor()));
+                    node.setColor(Color.GRAY);
                 }
             }
-        }
 
-        // [1, 2],
-        // [4, 3]
-        //Cases:
-        //    1. size%2 == 0 && size%2 == 0
-        //    2. size%2 == 0 && size%2 == 1
-        //    3. size%2 == 1 && size%2 == 1
-        //    4. size%2 == 1 && size%2 == 0
-        public int GetQuadrant(int i, int j, int size) {
-            int results = -1;
-
-            if (size % 2 == 0 && size % 2 == 0)
-                return 1;
-            else if (size % 2 == 0 && size % 2 == 1)
-                return 2;
-            else if (size % 2 == 1 && size % 2 == 1)
-                return 3;
-            else if (size % 2 == 1 && size % 2 == 0)
-                return 4;
-
-            return results;
+            if (node.getColor() == Color.GRAY) { //Node has children, not a leaf node
+                Switch(i, j, x, y, node.getNW(), size/2); //Call switch on each child
+                Switch(i, j, x, y + size/2, node.getNE(), size/2);
+                Switch(i, j, x + size/2, y + size/2, node.getSE(), size/2);
+                Switch(i, j, x + size/2, y, node.getSW(), size/2);
+                
+                if (node.LikeChildren()) { //If the node has like children, compress on the way back up the tree
+                    node.setColor(node.getNW().getColor());
+                    node.ClearChildren();
+                } else {
+                    node.setColor(Color.GRAY); //If not like, traverse up tree
+                }
+            }
         }
 
         // Public Union
@@ -221,13 +185,13 @@ namespace COIS3020_Assignment3 {
             
             if (treeOne.getColor() == Color.BLACK || treeTwo.getColor() == Color.BLACK) { //Either black
                 node.setColor(Color.BLACK);
-            } else if (treeOne.getColor() == Color.WHITE) { //Tree one is white, contents of tree two copied over
+            } else if (treeOne.getColor() == Color.WHITE) { //Tree one is white, contents of tree two copied over to node
                 node.setColor(treeTwo.getColor());
                 node.setNW(treeTwo.getNW());
                 node.setNE(treeTwo.getNE());
                 node.setSE(treeTwo.getSE());
                 node.setSW(treeTwo.getSW());
-            } else if (treeTwo.getColor() == Color.WHITE) { //Tree two is white, contents of tree two copied over
+            } else if (treeTwo.getColor() == Color.WHITE) { //Tree two is white, contents of tree two copied over to node
                 node.setColor(treeOne.getColor());
                 node.setNW(treeOne.getNW());
                 node.setNE(treeOne.getNE());
@@ -242,8 +206,7 @@ namespace COIS3020_Assignment3 {
 
             return node; //Returns node after all paths have been traversed, and new tree is unionized
         }
-
-        public int getLength() { return this.length; }
+        
         private Node getRoot() { return this.root; }
     }
 }
