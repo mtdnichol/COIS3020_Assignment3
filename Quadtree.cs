@@ -20,9 +20,10 @@ namespace COIS3020_Assignment3 {
             this.length = size;
             this.root = Construct(image, 0, 0, size);
             Compress();
+            Console.WriteLine();
         }
 
-        public QuadTree(Node node, int size) {
+        private QuadTree(Node node, int size) {
             this.root = node;
             this.length = size;
             Compress();
@@ -79,7 +80,7 @@ namespace COIS3020_Assignment3 {
                 case Color.BLACK:
                     for (int i = x; i < n + x; i++) //Iterate over the current section and copy it into the Color array
                         for (int j = y; j < n + y; j++) {
-                            testArray[x, y] = node.getColor();
+                            testArray[i, j] = node.getColor();
                         }
                     break;
                 case Color.GRAY: //If gray, more nodes in the sub quadrants.  Traverse each
@@ -116,9 +117,6 @@ namespace COIS3020_Assignment3 {
             if (node.LikeChildren()) {//Check if the node has like children (same colors)
                 node.setColor(node.getNW().getColor()); //If node has like children, the color of the node can be set to the color of its children
                 node.ClearChildren();
-            }
-            else {
-                node.setColor(Color.GRAY); //Otherwise, the node is coloured grey
             }
         }
 

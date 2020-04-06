@@ -1,4 +1,6 @@
-﻿namespace COIS3020_Assignment3 {
+﻿using System.Linq;
+
+namespace COIS3020_Assignment3 {
     public class Node {
         private Color color; //Either coloured black, white, or grey.  Black/White are leaf nodes
         private Node nw, ne, se, sw; //Four nodes representing four quadrants of grey nodes
@@ -15,13 +17,16 @@
         // Checks if each child referenced by this node is the same color
         // Returns: boolean variable representing result of comparison
         public bool LikeChildren() {
-            return nw.getColor() == ne.getColor() && nw.getColor() == se.getColor() && nw.getColor() == sw.getColor() && color!=Color.GRAY;
+            return nw.getColor().Equals(ne.getColor()) && nw.getColor().Equals(se.getColor()) && nw.getColor().Equals(sw.getColor());
         }
 
         public void ClearChildren() {
-            this.nw = this.ne = this.se = this.sw = null;
+            this.nw = null;
+            this.ne = null;
+            this.se = null;
+            this.sw = null;
         }
-
+ 
         //Access properties GET/SET
         public Color getColor() { return this.color; }
         public void setColor(Color color) { this.color = color; }

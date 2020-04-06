@@ -4,6 +4,20 @@ using System.Drawing;
 namespace COIS3020_Assignment3 {
     public static class Program {
         public static void Main(string[] args) {
+            Color[,] smallArray = {
+                {Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE},
+                {Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE},
+                {Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE},
+                {Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE},
+            };
+            
+            QuadTree smallTree = new QuadTree(smallArray, 4);
+            smallTree.Print();
+            
+            Console.WriteLine();
+            smallTree.Switch(0,0);
+            smallTree.Print();
+            
             Color[,] testArray = {
                 {Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE},
                 {Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE},
